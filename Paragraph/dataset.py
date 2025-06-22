@@ -25,6 +25,12 @@ class ParagraphDataset(Dataset):
     def __len__(self):
         return self.df_key.shape[0]
 
+    def _load_pdb_data(self, index):
+        pdb_code = self.df_key.iloc[index]["pdb_code"]
+        pdb_path = os.path.join(self.pdb_folder_path, pdb_code + ".pdb")
+        # read in and process imgt numbered pdb file - keep all atoms
+        return format_pdb(pdb_path)
+
     def __getitem__(self, index):
 
         # read in data from csv
@@ -32,9 +38,7 @@ class ParagraphDataset(Dataset):
         H_id = self.df_key.iloc[index]["H_id"]
         L_id = self.df_key.iloc[index]["L_id"]
 
-        # read in and process imgt numbered pdb file - keep all atoms
-        pdb_path = os.path.join(self.pdb_folder_path, pdb_code + ".pdb")
-        df = format_pdb(pdb_path)
+        df = self._load_pdb_data(index)
 
         # set nan coors to be zero - we do this here and not in the original function call as
         # otherwise edges would be formed between missing residues
