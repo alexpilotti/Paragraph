@@ -16,9 +16,10 @@ NEIGHBOUR_RADIUS = 10
 
 class ParagraphDataset(Dataset):
 
-    def __init__(self, pdb_H_L_csv, pdb_folder_path):
+    def __init__(self, pdb_H_L_csv, pdb_folder_path, search_area=SEARCH_AREA):
         self.pdb_H_L_csv = pdb_H_L_csv
         self.pdb_folder_path = pdb_folder_path
+        self.search_area = search_area
 
         self.df_key = pd.read_csv(self.pdb_H_L_csv, header=None, names=["pdb_code", "H_id", "L_id"])
 
@@ -42,14 +43,14 @@ class ParagraphDataset(Dataset):
 
         # set nan coors to be zero - we do this here and not in the original function call as
         # otherwise edges would be formed between missing residues
-        coors = get_CDR_coors(df, H_id, L_id).float()
+        coors = get_CDR_coors(df, H_id, L_id, search_area=self.search_area).float()
         coors[coors != coors] = 0
-        feats = get_all_CDR_node_features(df, H_id, L_id).float()
-        edges = get_CDR_edge_features(df, H_id, L_id).float()
+        feats = get_all_CDR_node_features(df, H_id, L_id, search_area=self.search_area).float()
+        edges = get_CDR_edge_features(df, H_id, L_id, search_area=self.search_area).float()
         graph = (feats, coors, edges)
 
         # extras data that may be useful in further analysis
-        df_CDR = get_Calpha_CDR_only_df(df, H_id, L_id)
+        df_CDR = get_Calpha_CDR_only_df(df, H_id, L_id, search_area=self.search_area)
         AAs = ['' if AA is np.nan else AA for AA in df_CDR["AA"].values.tolist()]
         AtomNum = ['' if num is np.nan else num for num in df_CDR["Atom_Num"].values.tolist()]
         chain = df_CDR["Chain"].values.tolist()
